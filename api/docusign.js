@@ -17,8 +17,8 @@ export default async function handler(req, res) {
   const userId = process.env.DOCUSIGN_USER_ID;
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
   const environment = process.env.DOCUSIGN_ENVIRONMENT || 'demo';
-  const templateId = 'YOUR_TEMPLATE_ID'; // <-- Replace with your template ID
-  const roleName = 'Signer'; // <-- Replace with the role name in your template
+  const templateId = 'e2579d0d-591b-40ab-84fb-ce8c767d5cf2'; // Membership Agreement
+  const roleName = 'LP Member'; // Role Name
 
   const basePath = environment === 'demo'
     ? 'https://demo.docusign.net/restapi'
