@@ -1,0 +1,9 @@
+{
+  "name": "docusign-middleware",
+  "version": "1.0.0",
+  "main": "api/docusign.js",
+  "type": "module",
+  "dependencies": {
+    "docusign-esign": "^5.19.0"
+  }
+}
