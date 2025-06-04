@@ -1,6 +1,5 @@
 // api/docusign.js
 
-import { NextResponse } from 'next/server'; // Only if using Next.js API, remove if plain Vercel
 import docusign from 'docusign-esign';
 
 // To deploy on Vercel, export a default async function
