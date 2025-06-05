@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
     // Create embedded signing view (recipient view)
     const viewRequest = new docusign.RecipientViewRequest();
-    viewRequest.returnUrl = 'https://yourwixsite.com/thank-you'; // Change to your post-signing page
+    viewRequest.returnUrl = 'https://www.leadingpeers.com/become-a-member-new'; // Change to your post-signing page
     viewRequest.authenticationMethod = 'none';
     viewRequest.email = email;
     viewRequest.userName = name;
