@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
   const basePath = environment === 'demo'
     ? 'https://demo.docusign.net/restapi'
-    : 'https://www.docusign.net/restapi';
+    : 'https://na4.docusign.net';
 
   const apiClient = new docusign.ApiClient();
   apiClient.setBasePath(basePath);
