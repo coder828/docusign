@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const userId = process.env.DOCUSIGN_USER_ID;
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
   const environment = process.env.DOCUSIGN_ENVIRONMENT || 'demo';
-  const templateId = '223a640a-9565-4d84-bd3d-08f917100a27'; // Template ID for Membership Agreement
+  const templateId = '8a06112d-de32-4285-be26-674f2d6f03c6'; // Template ID for Membership Agreement & Terms of Service (Diane Account)
   const roleName = 'LP Member:'; // Role Name
 
   const basePath = environment === 'demo'
@@ -66,7 +66,6 @@ export default async function handler(req, res) {
         name: name,
         roleName: roleName,
         clientUserId: '123', // Required for embedded signing. Can be any string.
-        // tabs: { textTabs: [{ tabLabel: "MyField", value: "Prefill Value" }] } // Optional, if you want to prefill fields
       }
     ];
 
@@ -77,7 +76,7 @@ export default async function handler(req, res) {
 
     // Create embedded signing view (recipient view)
     const viewRequest = new docusign.RecipientViewRequest();
-    viewRequest.returnUrl = 'https://www.leadingpeers.com/become-a-member-new'; // Change to your post-signing page
+    viewRequest.returnUrl = 'https://www.leadingpeers.com/';
     viewRequest.authenticationMethod = 'none';
     viewRequest.email = email;
     viewRequest.userName = name;
