@@ -1,11 +1,22 @@
 import docusign from 'docusign-esign';
 
 export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.leadingpeers.com'); // or '*' for public
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
-
+  
   const { name, email } = req.body;
   if (!name || !email) {
     res.status(400).json({ error: 'Missing name or email' });
