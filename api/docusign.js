@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
     // Create embedded signing view (recipient view)
     const viewRequest = new docusign.RecipientViewRequest();
-    viewRequest.returnUrl = 'https://www.leadingpeers.com/';
+    viewRequest.returnUrl = 'https://www.leadingpeers.com/membership-confirmation';
     viewRequest.authenticationMethod = 'none';
     viewRequest.email = email;
     viewRequest.userName = name;
