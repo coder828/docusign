@@ -77,8 +77,10 @@ export default async function handler(req, res) {
 
     res.status(200).json({ signingUrl: viewUrl.url });
   } catch (error) {
-    // Improved error output for debugging
-    console.error('DocuSign Error:', error.response ? error.response.body : error);
-    res.status(500).json({ error: 'Failed to create DocuSign envelope or signing URL.' });
+    console.error('DocuSign Error:', error, error.response ? error.response.body : '');
+    res.status(500).json({
+      error: 'Failed to create DocuSign envelope or signing URL.',
+      docusignError: error.response ? error.response.body : error.message || error
+    });
   }
 }
