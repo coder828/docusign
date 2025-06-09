@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const userId = process.env.DOCUSIGN_USER_ID;
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
   const environment = process.env.DOCUSIGN_ENVIRONMENT || 'demo';
-  const templateId = '8a06112d-de32-4285-be26-674f2d6f03c6'; // Template ID for Membership Agreement & Terms of Service (Diane Account)
+  const templateId = '585a7ba2-ba72-4add-902c-4ae536eaaefe'; // Template ID for Membership Agreement & Terms of Service (Diane Account)
   const roleName = 'LP Member:'; // Role Name
 
   const basePath = environment === 'demo'
