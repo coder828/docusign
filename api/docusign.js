@@ -29,7 +29,7 @@ export default async function handler(req, res) {
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
   const environment = process.env.DOCUSIGN_ENVIRONMENT || 'demo';
   const templateId = '887d4b49-73c0-4f5d-afa3-b5fbbff485cc'; // Template ID for Membership Agreement & Terms of Service (Diane Account)
-  const roleName = 'LP Member:'; // Role Name
+  const roleName = 'LP Member'; // Role Name
 
   const basePath = environment === 'demo'
     ? 'https://demo.docusign.net/restapi'
