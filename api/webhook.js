@@ -5,7 +5,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false
+    bodyParser: false // Required for raw DocuSign payloads
   }
 };
 
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Step 1: Get JWT access token
     const apiClient = new docusign.ApiClient();
     apiClient.setBasePath('https://account.docusign.com');
 
@@ -47,6 +48,7 @@ export default async function handler(req, res) {
     const accessToken = jwt.body.access_token;
     apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
+    // Step 2: Use production base path
     apiClient.setBasePath('https://na4.docusign.net/restapi');
 
     const userInfo = await apiClient.getUserInfo(accessToken);
@@ -54,7 +56,11 @@ export default async function handler(req, res) {
 
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId, { include: 'custom_fields' });
+    // Step 3: Get envelope metadata including custom fields
+    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId, {
+      include: 'custom_fields'
+    });
+
     const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
       f => f.name === 'userEmail'
     )?.value;
@@ -64,12 +70,13 @@ export default async function handler(req, res) {
       return res.status(200).send('Missing user email');
     }
 
-    // Correct: fetch as Buffer directly
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
+    // Step 4: Download signed PDF as a raw buffer
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null, {
+      responseType: 'arraybuffer'
+    });
 
     if (!Buffer.isBuffer(pdfBuffer)) {
-      console.error('Expected a Buffer, but got:', typeof pdfBuffer);
-      return res.status(500).send('Invalid PDF buffer');
+      throw new Error('Expected a Buffer from getDocument(), but got something else');
     }
 
     const attachment = {
