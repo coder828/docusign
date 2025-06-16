@@ -1,11 +1,11 @@
-import docusign from 'docusign-esign';
+import { ApiClient, EnvelopesApi } from 'docusign-esign';
 import sgMail from '@sendgrid/mail';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false // Required for raw DocuSign payloads
+    bodyParser: false // DocuSign sends raw body XML/JSON
   }
 };
 
@@ -33,8 +33,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Get JWT access token
-    const apiClient = new docusign.ApiClient();
+    // Authenticate via JWT
+    const apiClient = new ApiClient();
     apiClient.setBasePath('https://account.docusign.com');
 
     const jwt = await apiClient.requestJWTUserToken(
@@ -46,17 +46,17 @@ export default async function handler(req, res) {
     );
 
     const accessToken = jwt.body.access_token;
-    apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
-    // Step 2: Use production base path
+    // Switch to NA4 production API base path
     apiClient.setBasePath('https://na4.docusign.net/restapi');
+    apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
     const userInfo = await apiClient.getUserInfo(accessToken);
     const accountId = userInfo.accounts[0].accountId;
 
-    const envelopesApi = new docusign.EnvelopesApi(apiClient);
+    const envelopesApi = new EnvelopesApi(apiClient);
 
-    // Step 3: Get envelope metadata including custom fields
+    // Get the userEmail from custom fields
     const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId, {
       include: 'custom_fields'
     });
@@ -70,17 +70,11 @@ export default async function handler(req, res) {
       return res.status(200).send('Missing user email');
     }
 
-    // Step 4: Download signed PDF as a raw buffer
-    apiClient.setDefaultHeader('Accept', 'application/pdf');
-
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined');
-
-    if (!Buffer.isBuffer(pdfBuffer)) {
-      throw new Error('Expected a Buffer from getDocument(), but got something else');
-    }
+    // Get signed document
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
 
     const attachment = {
-      content: pdfBuffer.toString('base64'),
+      content: Buffer.from(pdfBuffer).toString('base64'),
       filename: 'Leading-Peers-Completed-Membership-Agreement.pdf',
       type: 'application/pdf',
       disposition: 'attachment'
