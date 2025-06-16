@@ -72,7 +72,7 @@ export default async function handler(req, res) {
 
     console.log('Sending email with:', {
       to: userEmail,
-      from: 'info@mail.leadingpeers.com',
+      from: 'info@em7126.mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
       text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
       attachments: [
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
     // Step 5: Send email with the signed document attached
     await sgMail.send({
       to: userEmail,
-      from: 'info@mail.leadingpeers.com',
+      from: 'info@em7126.mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
       text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
       attachments: [
