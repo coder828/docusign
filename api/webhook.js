@@ -5,7 +5,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false
+    bodyParser: false // Required to read raw payload from DocuSign
   }
 };
 
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Auth token request happens at account.docusign.com
+    // Step 1: Get JWT access token
     const apiClient = new docusign.ApiClient();
     apiClient.setBasePath('https://account.docusign.com');
 
@@ -48,17 +48,16 @@ export default async function handler(req, res) {
     const accessToken = jwt.body.access_token;
     apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
-    // Set fixed base URI for API calls (production on na4)
+    // Step 2: Set fixed base URI (na4) and get account ID dynamically
     apiClient.setBasePath('https://na4.docusign.net/restapi');
+
+    const userInfo = await apiClient.getUserInfo(accessToken);
+    const accountId = userInfo.accounts[0].accountId;
 
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-    // Get user email from envelope custom field
-    const envelopeDetails = await envelopesApi.getEnvelope(
-      process.env.DOCUSIGN_ACCOUNT_ID,
-      envelopeId
-    );
-
+    // Step 3: Fetch envelope details and extract userEmail from custom fields
+    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId);
     const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
       f => f.name === 'userEmail'
     )?.value;
@@ -68,15 +67,10 @@ export default async function handler(req, res) {
       return res.status(200).send('Missing user email');
     }
 
-    // Download signed PDF
-    const pdfBuffer = await envelopesApi.getDocument(
-      process.env.DOCUSIGN_ACCOUNT_ID,
-      envelopeId,
-      'combined',
-      null
-    );
+    // Step 4: Download the signed document as PDF
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
 
-    // Email it
+    // Step 5: Send email with the signed document attached
     await sgMail.send({
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
