@@ -68,14 +68,16 @@ export default async function handler(req, res) {
     }
 
     // Step 4: Download the signed document as PDF
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);    
-
+    // Fetch PDF as raw binary
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null, { encoding: null });
+    
     const attachment = {
-      content: pdfBuffer.toString('base64'), // ✅ encode properly
+      content: Buffer.from(pdfBuffer).toString('base64'), // base64 correct encoding for sendgrid
       filename: 'SignedMembershipAgreement.pdf',
       type: 'application/pdf',
       disposition: 'attachment'
     };
+
 
     console.log('Attachment size (bytes):', pdfBuffer.length);
 
