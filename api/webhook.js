@@ -73,33 +73,33 @@ export default async function handler(req, res) {
     
     const attachment = {
       content: Buffer.from(pdfBuffer).toString('base64'), // base64 correct encoding for sendgrid
-      filename: 'SignedMembershipAgreement.pdf',
+      filename: 'Leading-Peers-Completed-Membership-Agreement.pdf',
       type: 'application/pdf',
       disposition: 'attachment'
     };
     
-    console.log('Attachment size (bytes):', pdfBuffer.length);
+    // console.log('Attachment size (bytes):', pdfBuffer.length);
 
-    console.log('Sending email with:', {
-      to: userEmail,
-      from: 'info@mail.leadingpeers.com',
-      subject: 'Your Signed Membership Agreement',
-      text: '...pdf attached...',
-      attachments: [attachment]
-    });
+    // console.log('Sending email with:', {
+    //   to: userEmail,
+    //   from: 'info@mail.leadingpeers.com',
+    //   subject: 'Leading Peers - Completed Membership Agreement',
+    //   text: '...pdf attached...',
+    //   attachments: [attachment]
+    // });
 
     // Step 5: Send email with the signed document attached
     await sgMail.send({
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
-      subject: 'Your Signed Membership Agreement',
+      subject: 'Leading Peers - Completed Membership Agreement',
       text: `Hi there,
 
-Thanks for signing the Leading Peers Membership Agreement. Your signed agreement is attached to this email as a PDF.
+Thanks for completing the Leading Peers Membership Agreement. Your signed agreement is attached to this email as a PDF.
 
 Please keep it for your records.
 
-– The Leading Peers Team`,
+– Leading Peers`,
       attachments: [attachment]
     });
 
