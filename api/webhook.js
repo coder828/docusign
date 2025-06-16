@@ -1,4 +1,6 @@
-import { ApiClient, EnvelopesApi } from 'docusign-esign';
+import docusign from 'docusign-esign';
+const { ApiClient, EnvelopesApi } = docusign;
+
 import sgMail from '@sendgrid/mail';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
