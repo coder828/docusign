@@ -71,9 +71,9 @@ export default async function handler(req, res) {
     }
 
     // Step 4: Download signed PDF as a raw buffer
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null, {
-      responseType: 'arraybuffer'
-    });
+    apiClient.setDefaultHeader('Accept', 'application/pdf');
+
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined');
 
     if (!Buffer.isBuffer(pdfBuffer)) {
       throw new Error('Expected a Buffer from getDocument(), but got something else');
