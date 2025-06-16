@@ -91,7 +91,8 @@ export default async function handler(req, res) {
       from: 'info@mail.leadingpeers.com',
       subject: 'Leading Peers - Completed Membership Application',
       text: `Thank you for sending your application for Leading Peers. The signed Terms of Service is attached for your records. 
-      – Leading Peers`,
+
+– Leading Peers`,
       attachments: [attachment]
     });
 
