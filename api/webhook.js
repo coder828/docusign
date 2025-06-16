@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     const pdfRaw = await envelopesApi.getDocument(accountId, envelopeId, 'combined');
     const pdfBuffer = Buffer.from(pdfRaw, 'binary');
     
-    console.log(Buffer.isBuffer(pdfBuffer)); // ensure a Buffer is returned
+    // console.log(Buffer.isBuffer(pdfBuffer)); // ensure a Buffer is returned
 
     const attachment = {
       content: Buffer.from(pdfBuffer).toString('base64'),
@@ -89,14 +89,9 @@ export default async function handler(req, res) {
     await sgMail.send({
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
-      subject: 'Leading Peers - Completed Membership Agreement',
-      text: `Hi there,
-
-Thanks for completing the Leading Peers Membership Agreement. Your signed agreement is attached to this email as a PDF.
-
-Please keep it for your records.
-
-– Leading Peers`,
+      subject: 'Leading Peers - Completed Membership Application',
+      text: `Thank you for sending your application for Leading Peers. The signed Terms of Service is attached for your records. 
+      – Leading Peers`,
       attachments: [attachment]
     });
 
