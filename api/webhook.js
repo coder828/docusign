@@ -17,6 +17,8 @@ export default async function handler(req, res) {
   for await (const chunk of req) chunks.push(chunk);
   const rawBody = Buffer.concat(chunks).toString('utf8');
 
+  console.log('RAW BODY:', rawBody);
+
   const envelopeIdMatch = rawBody.match(/<EnvelopeID>(.+?)<\/EnvelopeID>/);
   const statusMatch = rawBody.match(/<Status>(.+?)<\/Status>/);
 
