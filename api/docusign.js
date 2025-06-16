@@ -69,6 +69,16 @@ export default async function handler(req, res) {
       }
     ];
 
+    // Add userEmail as a custom text field so the webhook can read it
+    envelopeDefinition.customFields = new docusign.CustomFields();
+    envelopeDefinition.customFields.textCustomFields = [
+      {
+        name: 'userEmail',
+        value: email,
+        show: false // optional — hide from signers
+      }
+    ];
+
     // Create the envelope
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
     const envelope = await envelopesApi.createEnvelope(accountId, { envelopeDefinition });
