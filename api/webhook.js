@@ -68,21 +68,23 @@ export default async function handler(req, res) {
     }
 
     // Step 4: Download the signed document as PDF
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);    
+
+    const attachment = {
+      content: pdfBuffer.toString('base64'), // ✅ encode properly
+      filename: 'SignedMembershipAgreement.pdf',
+      type: 'application/pdf',
+      disposition: 'attachment'
+    };
+
+    console.log('Attachment size (bytes):', pdfBuffer.length);
 
     console.log('Sending email with:', {
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
       text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
-      attachments: [
-        {
-          filename: 'SignedMembershipAgreement.pdf',
-          type: 'application/pdf',
-          disposition: 'attachment',
-          content: pdfBuffer.toString('base64').slice(0, 100) + '... (truncated)'
-        }
-      ]
+      attachments: [attachment]
     });
 
     // Step 5: Send email with the signed document attached
@@ -91,14 +93,7 @@ export default async function handler(req, res) {
       from: 'info@mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
       text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
-      attachments: [
-        {
-          content: pdfBuffer.toString('base64'),
-          filename: 'SignedMembershipAgreement.pdf',
-          type: 'application/pdf',
-          disposition: 'attachment'
-        }
-      ]
+      attachments: [attachment]
     });
 
     console.log(`✅ Sent signed document to ${userEmail}`);
