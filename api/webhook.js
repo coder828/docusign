@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
     // Step 3: Fetch envelope details and extract userEmail from custom fields
-    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId);
+    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId, { include: 'custom_fields' });
     const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
       f => f.name === 'userEmail'
     )?.value;
