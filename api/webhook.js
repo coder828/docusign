@@ -5,38 +5,40 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false // Required for DocuSign's webhook payload format
+    bodyParser: false // Required to access raw body for webhooks
   }
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // Parse raw body
+  // Read raw body
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   const rawBody = Buffer.concat(chunks).toString('utf8');
 
-  console.log('RAW BODY:', rawBody);
+  // Try to parse JSON
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch (err) {
+    console.error('Invalid JSON in webhook payload');
+    return res.status(400).send('Invalid JSON');
+  }
 
-  const envelopeIdMatch = rawBody.match(/<EnvelopeID>(.+?)<\/EnvelopeID>/);
-  const statusMatch = rawBody.match(/<Status>(.+?)<\/Status>/);
+  // Extract data
+  const envelopeId = payload?.data?.envelopeId;
+  const status = payload?.data?.envelopeSummary?.status?.toLowerCase();
 
-  if (!envelopeIdMatch || !statusMatch) {
-  console.warn('Webhook received but couldn’t parse EnvelopeID or Status.');
-  return res.status(200).send('Webhook received but unprocessable');
-}
-
-
-  const envelopeId = envelopeIdMatch[1];
-  const status = statusMatch[1];
-
-  if (status.toLowerCase() !== 'completed') return res.status(200).send('Ignored non-completed envelope');
+  if (!envelopeId || status !== 'completed') {
+    console.warn('Webhook ignored: missing envelopeId or not completed');
+    return res.status(200).send('Ignored');
+  }
 
   try {
-    // DocuSign Auth
+    // Authenticate with DocuSign
     const apiClient = new docusign.ApiClient();
-    apiClient.setBasePath('https://demo.docusign.net/restapi');
+    apiClient.setBasePath('https://demo.docusign.net/restapi'); // or production endpoint
     const jwt = await apiClient.requestJWTUserToken(
       process.env.DOCUSIGN_CLIENT_ID,
       process.env.DOCUSIGN_USER_ID,
@@ -44,6 +46,7 @@ export default async function handler(req, res) {
       process.env.DOCUSIGN_PRIVATE_KEY,
       3600
     );
+
     const accessToken = jwt.body.access_token;
     apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
@@ -51,36 +54,40 @@ export default async function handler(req, res) {
     const accountId = userInfo.accounts[0].accountId;
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-    // Get userEmail from custom fields
+    // Get email from custom field
     const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId);
-    const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(f => f.name === 'userEmail')?.value;
+    const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
+      f => f.name === 'userEmail'
+    )?.value;
 
     if (!userEmail) {
-      console.error('User email missing in envelope custom fields');
-      return res.status(400).send('Missing userEmail');
+      console.error('User email not found in custom fields');
+      return res.status(200).send('Missing user email');
     }
 
     // Get the signed document
     const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
 
-    // Send via SendGrid
+    // Send email
     await sgMail.send({
       to: userEmail,
-      from: 'info@mail.leadingpeers.com',
-      subject: 'Your Signed Document',
-      text: 'Hi, attached is your signed membership agreement.',
-      attachments: [{
-        content: pdfBuffer.toString('base64'),
-        filename: 'SignedMembershipAgreement.pdf',
-        type: 'application/pdf',
-        disposition: 'attachment'
-      }]
+      from: 'info@mail.leadingpeers.com', // must be authenticated in SendGrid
+      subject: 'Your Signed Membership Agreement',
+      text: 'Hi, attached is your signed document. Please keep it for your records.',
+      attachments: [
+        {
+          content: pdfBuffer.toString('base64'),
+          filename: 'SignedMembershipAgreement.pdf',
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }
+      ]
     });
 
-    console.log(`✅ Sent signed doc to ${userEmail}`);
+    console.log(`✅ Sent signed document to ${userEmail}`);
     return res.status(200).send('Email sent');
   } catch (err) {
-    console.error('Webhook error:', err);
-    return res.status(500).send('Webhook processing failed');
+    console.error('Webhook processing error:', err);
+    return res.status(500).send('Webhook error');
   }
 }
