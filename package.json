@@ -4,6 +4,7 @@
   "main": "api/docusign.js",
   "type": "module",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "docusign-esign": "^5.19.0"
   }
 }
