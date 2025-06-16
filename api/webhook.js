@@ -70,6 +70,21 @@ export default async function handler(req, res) {
     // Step 4: Download the signed document as PDF
     const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
 
+    console.log('Sending email with:', {
+      to: userEmail,
+      from: 'info@mail.leadingpeers.com',
+      subject: 'Your Signed Membership Agreement',
+      text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
+      attachments: [
+        {
+          filename: 'SignedMembershipAgreement.pdf',
+          type: 'application/pdf',
+          disposition: 'attachment',
+          content: pdfBuffer.toString('base64').slice(0, 100) + '... (truncated)'
+        }
+      ]
+    });
+
     // Step 5: Send email with the signed document attached
     await sgMail.send({
       to: userEmail,
