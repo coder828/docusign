@@ -77,15 +77,14 @@ export default async function handler(req, res) {
       type: 'application/pdf',
       disposition: 'attachment'
     };
-
-
+    
     console.log('Attachment size (bytes):', pdfBuffer.length);
 
     console.log('Sending email with:', {
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
-      text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
+      text: '...pdf attached...',
       attachments: [attachment]
     });
 
@@ -94,7 +93,13 @@ export default async function handler(req, res) {
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
-      text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
+      text: `Hi there,
+
+Thanks for signing the Leading Peers Membership Agreement. Your signed agreement is attached to this email as a PDF.
+
+Please keep it for your records.
+
+– The Leading Peers Team`,
       attachments: [attachment]
     });
 
