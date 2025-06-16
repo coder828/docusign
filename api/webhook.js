@@ -23,9 +23,10 @@ export default async function handler(req, res) {
   const statusMatch = rawBody.match(/<Status>(.+?)<\/Status>/);
 
   if (!envelopeIdMatch || !statusMatch) {
-    console.error('Invalid webhook payload');
-    return res.status(400).send('Invalid DocuSign Webhook');
-  }
+  console.warn('Webhook received but couldn’t parse EnvelopeID or Status.');
+  return res.status(200).send('Webhook received but unprocessable');
+}
+
 
   const envelopeId = envelopeIdMatch[1];
   const status = statusMatch[1];
