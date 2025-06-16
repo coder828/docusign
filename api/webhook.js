@@ -5,7 +5,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false // Required to read raw payload from DocuSign
+    bodyParser: false
   }
 };
 
@@ -33,7 +33,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Get JWT access token
     const apiClient = new docusign.ApiClient();
     apiClient.setBasePath('https://account.docusign.com');
 
@@ -48,7 +47,6 @@ export default async function handler(req, res) {
     const accessToken = jwt.body.access_token;
     apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
-    // Step 2: Set fixed base URI (na4) and get account ID dynamically
     apiClient.setBasePath('https://na4.docusign.net/restapi');
 
     const userInfo = await apiClient.getUserInfo(accessToken);
@@ -56,7 +54,6 @@ export default async function handler(req, res) {
 
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-    // Step 3: Fetch envelope details and extract userEmail from custom fields
     const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId, { include: 'custom_fields' });
     const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
       f => f.name === 'userEmail'
@@ -67,28 +64,21 @@ export default async function handler(req, res) {
       return res.status(200).send('Missing user email');
     }
 
-    // Step 4: Download the signed document as PDF
-    // Fetch PDF as raw binary
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null, { encoding: null });
-    
+    // Correct: fetch as Buffer directly
+    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
+
+    if (!Buffer.isBuffer(pdfBuffer)) {
+      console.error('Expected a Buffer, but got:', typeof pdfBuffer);
+      return res.status(500).send('Invalid PDF buffer');
+    }
+
     const attachment = {
-      content: Buffer.from(pdfBuffer).toString('base64'), // base64 correct encoding for sendgrid
+      content: pdfBuffer.toString('base64'),
       filename: 'Leading-Peers-Completed-Membership-Agreement.pdf',
       type: 'application/pdf',
       disposition: 'attachment'
     };
-    
-    // console.log('Attachment size (bytes):', pdfBuffer.length);
 
-    // console.log('Sending email with:', {
-    //   to: userEmail,
-    //   from: 'info@mail.leadingpeers.com',
-    //   subject: 'Leading Peers - Completed Membership Agreement',
-    //   text: '...pdf attached...',
-    //   attachments: [attachment]
-    // });
-
-    // Step 5: Send email with the signed document attached
     await sgMail.send({
       to: userEmail,
       from: 'info@mail.leadingpeers.com',
