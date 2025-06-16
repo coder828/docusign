@@ -38,7 +38,8 @@ export default async function handler(req, res) {
   try {
     // Authenticate with DocuSign
     const apiClient = new docusign.ApiClient();
-    apiClient.setBasePath('https://demo.docusign.net/restapi'); // or production endpoint
+    //apiClient.setBasePath('https://demo.docusign.net/restapi'); // or production endpoint
+    apiClient.setBasePath('https://www.docusign.net/restapi'); // ✅ Production
     const jwt = await apiClient.requestJWTUserToken(
       process.env.DOCUSIGN_CLIENT_ID,
       process.env.DOCUSIGN_USER_ID,
