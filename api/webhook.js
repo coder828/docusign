@@ -5,19 +5,17 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const config = {
   api: {
-    bodyParser: false // Required to access raw body for webhooks
+    bodyParser: false
   }
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // Read raw body
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   const rawBody = Buffer.concat(chunks).toString('utf8');
 
-  // Try to parse JSON
   let payload;
   try {
     payload = JSON.parse(rawBody);
@@ -26,7 +24,6 @@ export default async function handler(req, res) {
     return res.status(400).send('Invalid JSON');
   }
 
-  // Extract data
   const envelopeId = payload?.data?.envelopeId;
   const status = payload?.data?.envelopeSummary?.status?.toLowerCase();
 
@@ -36,10 +33,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Authenticate with DocuSign
+    // Auth token request happens at account.docusign.com
     const apiClient = new docusign.ApiClient();
-    //apiClient.setBasePath('https://demo.docusign.net/restapi'); // or production endpoint
-    apiClient.setBasePath('https://www.docusign.net/restapi'); // ✅ Production
+    apiClient.setBasePath('https://account.docusign.com');
+
     const jwt = await apiClient.requestJWTUserToken(
       process.env.DOCUSIGN_CLIENT_ID,
       process.env.DOCUSIGN_USER_ID,
@@ -51,30 +48,40 @@ export default async function handler(req, res) {
     const accessToken = jwt.body.access_token;
     apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
-    const userInfo = await apiClient.getUserInfo(accessToken);
-    const accountId = userInfo.accounts[0].accountId;
+    // Set fixed base URI for API calls (production on na4)
+    apiClient.setBasePath('https://na4.docusign.net/restapi');
+
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-    // Get email from custom field
-    const envelopeDetails = await envelopesApi.getEnvelope(accountId, envelopeId);
+    // Get user email from envelope custom field
+    const envelopeDetails = await envelopesApi.getEnvelope(
+      process.env.DOCUSIGN_ACCOUNT_ID,
+      envelopeId
+    );
+
     const userEmail = envelopeDetails?.customFields?.textCustomFields?.find(
       f => f.name === 'userEmail'
     )?.value;
 
     if (!userEmail) {
-      console.error('User email not found in custom fields');
+      console.error('User email not found in envelope custom fields');
       return res.status(200).send('Missing user email');
     }
 
-    // Get the signed document
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null);
+    // Download signed PDF
+    const pdfBuffer = await envelopesApi.getDocument(
+      process.env.DOCUSIGN_ACCOUNT_ID,
+      envelopeId,
+      'combined',
+      null
+    );
 
-    // Send email
+    // Email it
     await sgMail.send({
       to: userEmail,
-      from: 'info@mail.leadingpeers.com', // must be authenticated in SendGrid
+      from: 'info@mail.leadingpeers.com',
       subject: 'Your Signed Membership Agreement',
-      text: 'Hi, attached is your signed document. Please keep it for your records.',
+      text: 'Hi, attached is your signed membership agreement. Please keep it for your records.',
       attachments: [
         {
           content: pdfBuffer.toString('base64'),
