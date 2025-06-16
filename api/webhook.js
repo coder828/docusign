@@ -74,8 +74,9 @@ export default async function handler(req, res) {
 
     // Get signed document
     // const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null); // kept getting corrupted PDF in attachments
-    const pdfBuffer = await envelopesApi.getDocument(accountId, envelopeId, 'combined', null, { encoding: null });
-
+    const pdfRaw = await envelopesApi.getDocument(accountId, envelopeId, 'combined');
+    const pdfBuffer = Buffer.from(pdfRaw, 'binary');
+    
     console.log(Buffer.isBuffer(pdfBuffer)); // ensure a Buffer is returned
 
     const attachment = {
